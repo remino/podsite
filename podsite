@@ -89,7 +89,7 @@ podsite_unify() {
 	[ ! -d "$scriptdir/env/$env/public" ] \
 		&& _fatal $e_missing_dir "Missing directory: $scriptdir/env/$env/public"
 
-	PATH="$scriptdir/modules/unidir/unidir:$PATH"
+	PATH="$scriptdir/modules/unidir:$PATH"
 
 	_cd "$scriptdir"
 
