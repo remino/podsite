@@ -1,7 +1,7 @@
 #!/bin/sh
 # podsite
 
-VERSION='1.1.0'
+VERSION='1.1.1'
 
 podsite_main() {
 	trap _exit INT TERM
@@ -93,7 +93,7 @@ podsite_new() {
 	[ -d "$dir" ] && _fatal $e_exists "Directory already exists: $dir"
 	shift
 
-	git clone https://github.com/remino/podsite "$dir"
+	git clone --recursive https://github.com/remino/podsite "$dir"
 	cd "$dir" || _fatal $e_cannot_cd "Failed to cd to: $dir"
 
 	./podsite init "$@"
