@@ -1,7 +1,7 @@
 #!/bin/sh
 # podsite
 
-VERSION='1.1.0'
+VERSION='1.1.1'
 
 podsite_main() {
 	trap _exit INT TERM
@@ -10,6 +10,7 @@ podsite_main() {
 	e_missing_app=17
 	e_cannot_cd=18
 	e_missing_dir=19
+	e_exists=20
 
 	_require realpath
 
@@ -35,7 +36,7 @@ podsite_main() {
 	[ -z "$cmd" ] && cmd="help"
 
 	case "$cmd" in
-		help|init|unify|version) "podsite_$cmd" "$@" ;;
+		help|init|new|unify|version) "podsite_$cmd" "$@" ;;
 		*) _invalid_cmd ;;
 	esac
 
@@ -50,6 +51,7 @@ USAGE:
 
 	$scriptinv [<options>] help
 	$scriptinv [<options>] init [<env1>] [<env2>] [<envn>...]
+	$scriptinv [<options>] new <dir> [<env1>] [<env2>] [<envn>...]
 	$scriptinv [<options>] unify [<env>]
 	$scriptinv [<options>] version
 
@@ -61,6 +63,8 @@ COMMANDS:
 
 	help      Show this help screen.
 	init      Initialize podsite for <envs>.
+	          (Default: dev production staging test)
+	new       Create new podsite and initialize for <envs>.
 	          (Default: dev production staging test)
 	unify     Unify pods into public site for <env>.
 	          (Default: dev)
@@ -80,6 +84,19 @@ podsite_init() {
 	[ $# -lt 1 ] && _init_env_dirs dev production staging test && return
 
 	_init_env_dirs "$@"
+}
+
+podsite_new() {
+	[ $# -lt 1 ] && _fatal $e_args "Must specify directory."
+
+	dir="$1"
+	[ -d "$dir" ] && _fatal $e_exists "Directory already exists: $dir"
+	shift
+
+	git clone --recursive https://github.com/remino/podsite "$dir"
+	cd "$dir" || _fatal $e_cannot_cd "Failed to cd to: $dir"
+
+	./podsite init "$@"
 }
 
 podsite_unify() {
