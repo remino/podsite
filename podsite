@@ -93,15 +93,15 @@ podsite_unify() {
 
 	_cd "$scriptdir"
 
-	if [ -d "common/pods" ] && ! _dir_empty "common/pods"
-	then
-		unidir -f "common/pods"/* "env/$env/public"
-	fi
+	target="env/$env/public"
 
-	if [ -d "env/$env/pods" ] && ! _dir_empty "env/$env/pods"
-	then
-		unidir -f "env/$env/pods"/* "env/$env/public"
-	fi
+	_unify_into_target "$target"
+
+	find "$target" -maxdepth 1 -mindepth 1 -type d -not -iname '.*' \
+		| while read -r dirpath
+	do
+		_unify_into_target "$target" "$( basename "$dirpath" )"
+	done
 
 	_cd -
 }
@@ -188,6 +188,24 @@ _require() {
 	if [ $missing_bin -ne 0 ]
 	then
 		_fatal $e_missing_app "One or more executables or apps are missing."
+	fi
+}
+
+_unify_into_target() {
+	target="$1"
+	subdir="$2"
+
+	subpath=
+	[ -n "$subdir" ] && subpath="/$subdir"
+
+	if [ -d "common/pods" ] && ! _dir_empty "common/pods"
+	then
+		unidir -f "common/pods"/*"$subpath" "$target"
+	fi
+
+	if [ -d "env/$env/pods" ] && ! _dir_empty "env/$env/pods"
+	then
+		unidir -f "env/$env/pods"/*"$subpath" "$target"
 	fi
 }
 
