@@ -2,7 +2,7 @@
 # podsite
 # shellcheck disable=SC2012,SC2317
 
-VERSION='1.1.2'
+VERSION='1.2.0'
 
 podsite_main() {
 	trap _exit INT TERM
