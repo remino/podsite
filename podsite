@@ -1,42 +1,41 @@
 #!/bin/sh
 # podsite
+# shellcheck disable=SC2317
 
 VERSION='1.1.2'
 
 podsite_main() {
 	trap _exit INT TERM
 
-	e_args=16
-	e_missing_app=17
-	e_cannot_cd=18
-	e_missing_dir=19
-	e_exists=20
+	E_ARGS=16
+	E_MISSING_APP=17
+	E_CANNOT_CD=18
+	E_MISSING_DIR=19
+	E_EXISTS=20
 
-	_require realpath
-
-	scriptinv="$( basename "$0" )"
-	scriptpath="$( realpath "$0" )"
-	scriptname="$( basename "$scriptpath" )"
-	scriptdir="$( dirname "$scriptpath" )"
+	SCRIPT_INV="$( basename "$0" )"
+	SCRIPT_PATH="$( readlink -f "$0" )"
+	SCRIPT_NAME="$( basename "$SCRIPT_PATH" )"
+	SCRIPT_DIR="$( dirname "$SCRIPT_PATH" )"
 
 	while getopts hv opt
 	do
 		case $opt in
-			h) cmd=help ;;
-			v) cmd=version ;;
+			h) CMD=help ;;
+			v) CMD=version ;;
 			*) _invalid_opt ;;
 		esac
 	done
 
 	shift "$(( OPTIND - 1 ))"
 
-	[ -z "$cmd" ] && cmd="$1"
+	[ -z "$CMD" ] && CMD="$1"
 	shift
 
-	[ -z "$cmd" ] && cmd="help"
+	[ -z "$CMD" ] && CMD="help"
 
-	case "$cmd" in
-		help|init|new|unify|version) "podsite_$cmd" "$@" ;;
+	case "$CMD" in
+		help|init|new|unify|version) "podsite_$CMD" "$@" ;;
 		*) _invalid_cmd ;;
 	esac
 
@@ -45,15 +44,15 @@ podsite_main() {
 
 podsite_help() {
 cat <<USAGE
-$scriptname $VERSION
+$SCRIPT_NAME $VERSION
 
 USAGE:
 
-	$scriptinv [<options>] help
-	$scriptinv [<options>] init [<env1>] [<env2>] [<envn>...]
-	$scriptinv [<options>] new <dir> [<env1>] [<env2>] [<envn>...]
-	$scriptinv [<options>] unify [<env>]
-	$scriptinv [<options>] version
+	$SCRIPT_INV [<options>] help
+	$SCRIPT_INV [<options>] init [<env1>] [<env2>] [<envn>...]
+	$SCRIPT_INV [<options>] new <dir> [<env1>] [<env2>] [<envn>...]
+	$SCRIPT_INV [<options>] unify [<env>]
+	$SCRIPT_INV [<options>] version
 
 Manage a "podsite", directory containing multiple "pods",
 or small web sites or apps, to be combined into a single
@@ -79,7 +78,7 @@ USAGE
 }
 
 podsite_init() {
-	_mkdir "$scriptdir/common/pods"
+	_mkdir "$SCRIPT_DIR/common/pods"
 
 	[ $# -lt 1 ] && _init_env_dirs dev production staging test && return
 
@@ -87,14 +86,14 @@ podsite_init() {
 }
 
 podsite_new() {
-	[ $# -lt 1 ] && _fatal $e_args "Must specify directory."
+	[ $# -lt 1 ] && _fatal "$E_ARGS" "Must specify directory."
 
 	dir="$1"
-	[ -d "$dir" ] && _fatal $e_exists "Directory already exists: $dir"
+	[ -d "$dir" ] && _fatal "$E_EXISTS" "Directory already exists: $dir"
 	shift
 
 	git clone --recursive https://github.com/remino/podsite "$dir"
-	cd "$dir" || _fatal $e_cannot_cd "Failed to cd to: $dir"
+	cd "$dir" || _fatal "$E_CANNOT_CD" "Failed to cd to: $dir"
 
 	./podsite init "$@"
 }
@@ -103,12 +102,12 @@ podsite_unify() {
 	env="$1"
 	[ -z "$env" ] && env=dev
 
-	[ ! -d "$scriptdir/env/$env/public" ] \
-		&& _fatal $e_missing_dir "Missing directory: $scriptdir/env/$env/public"
+	[ ! -d "$SCRIPT_DIR/env/$env/public" ] \
+		&& _fatal "$E_MISSING_DIR" "Missing directory: $SCRIPT_DIR/env/$env/public"
 
-	PATH="$scriptdir/modules/unidir:$PATH"
+	PATH="$SCRIPT_DIR/modules/unidir:$PATH"
 
-	_cd "$scriptdir"
+	_cd "$SCRIPT_DIR"
 
 	target="env/$env/public"
 
@@ -124,16 +123,17 @@ podsite_unify() {
 }
 
 podsite_version() {
-	_echo "$scriptname $VERSION"
+	_echo "$SCRIPT_NAME $VERSION"
 }
 
 _cd() {
 	dir="$1"
 	cd "$dir" > /dev/null 2>&1 \
-		|| _fatal $e_cannot_cd "Cannot change into directory: $dir"
+		|| _fatal "$E_CANNOT_CD" "Cannot change into directory: $dir"
 }
 
 _dir_empty() {
+	# shellcheck disable=SC2012
 	[ "$( ls "$1" 2>/dev/null | wc -l | tr -d ' ' )" = "0" ]
 }
 
@@ -162,23 +162,23 @@ _init_env_dirs() {
 	do
 		for subdir in pods public
 		do
-			_mkdir "$scriptdir/env/$env/$subdir"
+			_mkdir "$SCRIPT_DIR/env/$env/$subdir"
 		done
 	done
 }
 
 _invalid_cmd() {
-	_error "Invalid command: $cmd"
+	_error "Invalid command: $CMD"
 	_echo
 	podsite_help
-	exit $e_args
+	exit $E_ARGS
 }
 
 _invalid_opt() {
 	_error "Invalid option: $opt"
 	_echo
 	podsite_help
-	exit $e_args
+	exit $E_ARGS
 }
 
 _mkdir() {
@@ -202,9 +202,9 @@ _require() {
 		fi
 	done
 
-	if [ $missing_bin -ne 0 ]
+	if [ "$missing_bin" -ne 0 ]
 	then
-		_fatal $e_missing_app "One or more executables or apps are missing."
+		_fatal "$E_MISSING_APP" "One or more executables or apps are missing."
 	fi
 }
 
