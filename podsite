@@ -1,6 +1,6 @@
 #!/bin/sh
 # podsite
-# shellcheck disable=SC2317
+# shellcheck disable=SC2012,SC2317
 
 VERSION='1.1.2'
 
@@ -133,7 +133,6 @@ _cd() {
 }
 
 _dir_empty() {
-	# shellcheck disable=SC2012
 	[ "$( ls "$1" 2>/dev/null | wc -l | tr -d ' ' )" = "0" ]
 }
 
@@ -162,7 +161,7 @@ _init_env_dirs() {
 	do
 		for subdir in pods public
 		do
-			_mkdir "$SCRIPT_DIR/env/$env/$subdir"
+			_mkdir "$SCRIPT_DIR/env/$env/$subdir/public"
 		done
 	done
 }
@@ -212,17 +211,29 @@ _unify_into_target() {
 	target="$1"
 	subdir="$2"
 
-	subpath=
-	[ -n "$subdir" ] && subpath="/$subdir"
+	subpath="/public"
+	subtarget="$target"
+
+	if [ -n "$subdir" ]
+	then
+		subpath="$subpath/$subdir"
+		subtarget="$subtarget/$subdir"
+	fi
 
 	if [ -d "common/pods" ] && ! _dir_empty "common/pods"
 	then
-		unidir -f "common/pods"/*"$subpath" "$target"
+		if [ "$( ls "common/pods"/*"$subpath" 2>/dev/null | wc -l )" -gt 0 ]
+		then
+			unidir -f "common/pods"/*"$subpath" "$subtarget"
+		fi
 	fi
 
 	if [ -d "env/$env/pods" ] && ! _dir_empty "env/$env/pods"
 	then
-		unidir -f "env/$env/pods"/*"$subpath" "$target"
+		if [ "$( ls "env/$env/pods"/*"$subpath" 2>/dev/null | wc -l )" -gt 0 ]
+		then
+			unidir -f "env/$env/pods"/*"$subpath" "$subtarget"
+		fi
 	fi
 }
 
